@@ -1,12 +1,12 @@
 # CodexHost Workflow
 
-面向 CodexHost 的质量优先协作技能：**Codex 策划与分包验收，DeepSeek Harness（DSH）作为唯一执行调度者。**
+面向 CodexHost 的质量优先协作技能：**你告诉 Codex 目标，Codex 衔接计划、DSH 调度与成果验收。** DeepSeek Harness（DSH）是唯一执行调度者。
 
 适用于希望使用多个执行成员、控制主控上下文、处理 Codex 额度中断，同时保留明确验收标准的个人项目。
 
 ## 分工与约束
 
-- Codex 负责版本化计划、关键技术决策、分包审查及必要的集成验收。
+- Codex 主控负责计划、建立或复用 DSH 调度会话、跟进交付、关键技术决策、分包审查及必要的集成验收。
 - DSH 按获批计划形成 brief、安排成员、组织自测和普通修复；执行完成先进入待验收。
 - 授权计划、当前状态和重要决策分别维护，不允许执行者自行降低验收标准。
 - 有修改的任务开始前建立覆盖已有未提交改动的回退点。
@@ -36,18 +36,18 @@ git clone https://github.com/Nniuniu-nn/codexhost-workflow.git ~/.agents/skills/
 
 ## 开始使用
 
-在 CodexHost 中打开目标业务项目，先在 Codex 会话中调用：
+在 CodexHost 中打开目标业务项目，在 Codex 会话里说：
 
 ```text
-使用 $codexhost-workflow，角色 planner。
-项目路径：【填写绝对路径】
-目标：【填写本次功能或问题】
-先核对项目规则和现有改动，形成版本化计划，明确验收标准、回退点和停止条件。
+使用 $codexhost-workflow 完成这个任务：修复面试记录页刷新后记录消失的问题。
+由你安排 DSH 调度、跟进交付并验收，需要我决定的事情再问我。
 ```
 
-审阅并批准计划后，在同项目的 DSH 会话中加载 `codexhost-workflow`，指定 `dispatcher` 角色及获批计划。DSH 网页也可用 `/codexhost-workflow` 显式调用。
+把示例目标换成自己的需求即可。默认进入 Codex 主控模式；计划、任务编号、依赖、DSH 会话绑定和验收材料由它们整理，不需要你填写。项目不明确时才询问路径。
 
-交付后，在 Codex 指定 `reviewer` 角色，提供原计划、包ID/修订和证据入口，审查实际成果。
+你继续在这个 Codex 会话沟通。它应实际调用 CodexHost 创建或复用 DSH 调度会话，跟进交付，收到成果后审查代码与证据；需补正时交回原 DSH，由它安排修复。DSH 自测不能代替 Codex 验收。
+
+若只想讨论，可明确说“先讨论，不执行”。`planner`、`dispatcher`、`reviewer` 是内部职责或高级单独入口，不是每次使用时必须手动切换的三个步骤。
 
 完整提示词和试用步骤见 [TRYOUT.md](TRYOUT.md)。
 
@@ -63,12 +63,14 @@ git clone https://github.com/Nniuniu-nn/codexhost-workflow.git ~/.agents/skills/
 | 文件 | 用途 |
 |---|---|
 | [SKILL.md](SKILL.md) | 角色、质量门、交接与额度中断规则 |
+| [references/orchestration.md](references/orchestration.md) | Codex 主控的原生会话衔接与交付跟进 |
 | [references/artifacts.md](references/artifacts.md) | 计划、状态、brief、回执和验收记录的字段示例 |
 | [TRYOUT.md](TRYOUT.md) | 试用入口与试用后的反馈材料 |
 
 ## 验证范围
 
-首版已做技能格式检查、Codex/DSH 原生技能发现与读取检查，以及独立的文档一致性和压力场景评估。
+首版已做技能格式检查、Codex/DSH 原生技能发现与读取检查，以及文档和压力场景评估。试用反馈后，默认入口已改为 Codex 主控，取消用户手动搬运计划、任务编号和回执的步骤。
+此次入口修订做了格式、引用检查与独立的只读场景评估；没有据此宣称真实的自动派发至验收闭环已通过业务试用。
 
 这些检查不代表真实业务验收。项目质量、团队实际行为、成员模型选择、重启恢复和额度节省，仍需在具体项目中验证。
 

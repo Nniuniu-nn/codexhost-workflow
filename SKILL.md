@@ -1,25 +1,37 @@
 ---
 name: codexhost-workflow
-description: Use when coordinating a quality-first project through CodexHost with Codex planning and package review, a DSH dispatcher, parallel executors, context handoff, or quota interruptions. 适用于 Codex 策划验收、DSH 唯一调度、团队协作与试用后复验；不用于普通单窗口小改动或仅介绍工具。
+description: Use when the user asks Codex to use this workflow to complete project work, automatically arrange a DSH dispatcher, follow delivery and review, or handle parallel work and context handoff. 用户只说项目目标即可启动；Codex 主控自动衔接计划、DSH 调度与验收。不用于仅介绍工具或明确只讨论方案的请求。
 ---
 
 # CodexHost 项目协作
 
 质量优先。Codex 制定计划、裁决关键技术问题并验收；DSH 是唯一执行调度者。减少重复转述和无效等待，不降低完成条件。
 
+## 默认入口：用户只说目标
+
+用户在 Codex 中说“用 codexhost-workflow 做这件事”时，默认进入 `coordinator` 主控模式：从当前项目核对目标和授权，形成内部计划，自动建立或继续 DSH 调度会话，跟进交付，再由 Codex 验收。**不能把计划写完就当成用户要求已经完成。**
+
+- 用户不必知道或填写角色名、包ID、批次、版本哈希、依赖、执行会话链接或证据目录。这些字段由主控核对现场并生成、记录、传递。
+- 仅询问影响实际目标、权限或风险的用户选择。当前会话已能确定的项目路径、已有计划和原 DSH 会话先自行查明，不能为了填表让用户转述。
+- 已明确授权执行的任务，内部计划记录该授权后直接推进；只有用户要求先出方案，或确有新的关键决策时才停在相应边界，不机械追加一轮“批准计划”。
+- 自动创建 DSH **调度者**并交付获批计划是主控衔接，不是向执行成员派单。包级 brief、成员分配和返工仍由唯一 DSH 调度者负责；Codex 不同时建立另一队执行者。
+- 先读取 [references/orchestration.md](references/orchestration.md)，按原生 CodexHost 能力真正衔接。CLI 不可用或授权不足时报告具体阻塞，不把手工三窗口教程当成默认完成结果。
+- 用户只需在一个 Codex 主控会话提出需求并接收进展/结果；除必要业务决策外，不要求用户创建 DSH 窗口、复制计划、监工、搬运回执或手动触发每包验收。
+
 ## 先绑定角色与项目
 
-- 从用户指令和已有状态确定绝对项目根、当前角色、计划版本及授权；未指定业务项目时先问项目路径，不能拿当前工具目录代替。
-- 角色为 `planner`（策划）、`dispatcher`（调度）、`executor`（执行）、`reviewer`（验收）。不根据模型名称猜角色；角色不清楚时先澄清。
+- 从用户指令、当前业务工作区和已有状态确定绝对项目根、当前角色、计划版本及授权；仅在无法确定目标项目时问路径，不能拿技能源码目录代替业务项目。
+- `coordinator` 为默认 Codex 主控，衔接策划、调度会话和验收。`planner`（仅策划）、`dispatcher`（调度）、`executor`（执行）、`reviewer`（仅验收）为明确指定的分工；这些内部名称不要求用户掌握。不根据模型名称猜角色；仅有实质歧义时澄清。
 - 保留项目现有规则、状态入口和未提交改动。本技能不继承旧 agent-bus 授权，不创建或恢复总线。
 - 如已有 project-commander 的通用约定，继续遵守；本工作流中唯一执行调度者为 DSH，不同时加载多套完整流程。
-- 通信能力使用原生 CodexHost/DSH。CodexHost 操作按当前 `codexhost-delegation` 技能与 CLI help；纯计划、审查不据此自动创建执行会话。
+- 通信能力使用原生 CodexHost/DSH。CodexHost 操作按当前 `codexhost-delegation` 技能与 CLI help；明确只计划、只审查或只讨论的请求不自动启动执行。端到端任务则由主控完成会话衔接，不能误套“planner 不派单”而停在文件交付。
 
 ## 职责
 
 | 角色 | 应做 | 不应做 |
 |---|---|---|
-| planner | 明确目标、包清单、接口、验收标准、权限和停止点；产出待批准计划 | 给执行成员派单或用计划文件假装已派发 |
+| coordinator | 自动衔接计划 → 原/新 DSH 调度会话 → 交付读取 → Codex 验收 → 必要补正 | 让用户搬运内部字段，绕过 DSH 调度者给执行成员派单 |
+| planner | 明确目标、包清单、接口、验收标准、权限和停止点；记录已有授权，未覆盖部分待决 | 给执行成员派单或用计划文件假装已派发 |
 | dispatcher | 按获批计划形成 brief、分配成员、维护任务状态、组织普通修复和集成 | 改写验收标准，代 Codex 落最终验收，绕过权限增加任务 |
 | executor | 在独占范围实现、自测、自修，绑定交付版本并回报 | 自行扩展范围、重派别人的任务或把自检说成验收 |
 | reviewer | 对照原计划检查源码、Diff、必要失败路径及证据；返回具体结论 | 只凭五行摘要/测试数量通过，直接越过调度者给成员派返工 |
@@ -70,8 +82,8 @@ description: Use when coordinating a quality-first project through CodexHost wit
 待决: 需要调度者或用户裁决的问题；无则写“无”
 ```
 
-reviewer 给出 `通过 / 限定通过 / 需补正 / 阻塞`，同时说明检查范围与遗漏。调度者汇总后组织返工，不把摘要、规则校验或一次场景演练当成业务验收。
+reviewer 给出 `通过 / 限定通过 / 需补正 / 阻塞`，同时说明检查范围与遗漏。主控将结论交回原 DSH 调度会话组织返工，不让用户转发，也不把 DSH 自检回报当作 Codex 验收。不把摘要、规则校验或一次场景演练当成业务验收。
 
 ## 当前能力边界
 
-本技能是行为规则，不是常驻调度器、文件权限沙箱或费用硬限。不会自动判断账号额度、创建接管窗口或迁移 Team。技能可发现、连接 ready、场景回答符合规则，均不能替代用户真实试用和针对产物的独立验收。
+本技能要求当前 Codex 主控使用原生工具执行会话衔接，不是另一个常驻调度器、文件权限沙箱或费用硬限。不会自动判断账号额度、创建新的 Codex 接管窗口或迁移 Team。完成通知受宿主运行和 Codex 可用性约束；技能可发现、连接 ready、场景回答符合规则，均不能替代真实试用和产物验收。
